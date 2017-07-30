@@ -3,18 +3,18 @@ from yeelight import Bulb,RGBTransition,Flow
 
 class YeelightDriver(object):
     class Constants(object):
-        sun_up=255, 232,0
-        sun_low = 255,73,0
+        sun_up=102, 20,0
+        sun_low = 217,124,0
         min_duration = 50
         min_power = 1
-        max_power = 90
+        max_power = 81
 
     def __init__(self,ip):
         self.bulb= Bulb(ip)
 
     @property
     def is_bulb_on(self):
-        res = self.bulb.get_properties
+        res = self.bulb.get_properties()
         return res["power"]=="on"
 
     @staticmethod
@@ -22,7 +22,7 @@ class YeelightDriver(object):
         return [RGBTransition(a[0],
                              a[1],
                              a[2],
-                             Constants.min_duration,
+                              YeelightDriver.Constants.min_duration,
                              powers[0]),
                RGBTransition(b[0],
                              b[1],
@@ -42,10 +42,16 @@ class YeelightDriver(object):
                 return bulb.turn_off()
             if command in ("toggle","toogle"):
                 return bulb.toggle()
+                
             if command == "brightness":
                 if not self.is_bulb_on:
                     bulb.turn_on()
                 return bulb.set_brightness(int(options[0]))
+            if command == "cozy":
+                if not self.is_bulb_on:
+                    bulb.turn_on()
+                bulb.set_rgb(129,59,0)
+                return bulb.set_brightness(19)
             if command in ("sunrise","sunset"):
                 duration = int(options[0])
                 a = self.Constants.sun_up if command == "sunset" else self.Constants.sun_low
@@ -55,12 +61,9 @@ class YeelightDriver(object):
                 return bulb.start_flow(flow)
             if command == "forest":
                 array= [(34,74,0,10,60000),(60,112,17,5,60000),(94,150,48,7,60000)]
-                transitions=array_transition(array)
+                transitions=self.array_transition(array)
                 return self.bulb.start_flow(Flow(count=0,action = Flow.actions.recover,transitions=transitions))
-        try:
-            switch()
-        except e:
-            return "error"
+        switch()
         return "ok"
 
 
